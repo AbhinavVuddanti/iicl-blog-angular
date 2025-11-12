@@ -19,15 +19,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Create a directory for the SQLite database
+RUN mkdir -p /app/Data
+
 # Set environment variables
-ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_RUNNING_IN_CONTAINER=true
 
-# Health check with reasonable defaults for production
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl --fail http://localhost:${PORT}/health || exit 1
+# Expose port 8080
+EXPOSE 8080
 
-EXPOSE ${PORT}
-
+# Set the entry point
 ENTRYPOINT ["dotnet", "BlogApi.dll"]
