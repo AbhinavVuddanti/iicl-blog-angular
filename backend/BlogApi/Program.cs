@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using BlogApi.Data;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
-using Npgsql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -50,35 +49,27 @@ builder.Services.AddSwaggerGen(c =>
     // Removed EnableAnnotations as it requires Swashbuckle.AspNetCore.Annotations package
 });
 
-// Database configuration
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string missing");
-
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddDbContext<BlogContext>(opt => 
-        opt.UseSqlServer(connectionString));
-}
-else
-{
-    // For production (PostgreSQL)
-    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-    
-    // Clean and format the connection string for PostgreSQL
-    var postgresConnectionString = connectionString
-        .Replace("Trusted_Connection=True;", "")
-        .Replace("MultipleActiveResultSets=true;", "")
-        .Replace("TrustServerCertificate=True;", "Trust Server Certificate=true;")
-        .Replace("Server=", "Host=")
-        .Replace("Database=", "Database=")
-        .TrimEnd(';') + ";Trust Server Certificate=true;";
-
-    builder.Services.AddDbContext<BlogContext>(opt => 
-        opt.UseNpgsql(postgresConnectionString, 
-            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-}
+// Database configuration - Using SQLite for both development and production
+builder.Services.AddDbContext<BlogContext>(options =>
+    options.UseSqlite("Data Source=blog.db"));
 
 var app = builder.Build();
+
+// Create and seed the database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<BlogContext>();
+        context.Database.EnsureCreated(); // This will create the database and apply any pending migrations
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while creating the database.");
+    }
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
