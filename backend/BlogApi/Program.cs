@@ -4,67 +4,66 @@ using BlogApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Add services
 builder.Services.AddControllers();
 
-// Add DbContext with SQL Server
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
-builder.Services.AddDbContext<BlogContext>(options =>
-    options.UseSqlServer(connectionString));
-
-// Add CORS policy to allow requests from any origin for development
+// CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowAll", p =>
+        p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
-// Add Swagger/OpenAPI
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Blog API", Version = "v1" });
+    c.SwaggerDoc("v1", new() { Title = "Blog API", Version = "v1" });
 });
+
+// DATABASE: SQL Server (local) | PostgreSQL (Render)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string missing");
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<BlogContext>(opt => opt.UseSqlServer(connectionString));
+}
+else
+{
+    builder.Services.AddDbContext<BlogContext>(opt => opt.UseNpgsql(connectionString));
+}
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Pipeline
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1");
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1");
+    c.RoutePrefix = "swagger";
+});
+
+// Health Check (Render)
+app.MapGet("/health", () => Results.Ok("Healthy"));
 
 app.UseHttpsRedirection();
-app.UseCors();
+app.UseCors("AllowAll");
 app.UseAuthorization();
-
-// Map controllers
 app.MapControllers();
 
-// Seed the database
+// AUTO CREATE DB (NO MIGRATIONS — LIKE BEFORE)
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
+    var context = scope.ServiceProvider.GetRequiredService<BlogContext>();
     try
     {
-        var context = services.GetRequiredService<BlogContext>();
-        context.Database.EnsureCreated();
+        context.Database.EnsureCreated(); // This is what you had — it just works
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error creating database");
     }
 }
 
