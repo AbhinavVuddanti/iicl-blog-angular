@@ -64,12 +64,14 @@ else
     // For production (PostgreSQL)
     AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
     
-    // Create a new connection string builder to ensure proper formatting
-    var postgresConnectionString = new NpgsqlConnectionStringBuilder(connectionString)
-    {
-        TrustServerCertificate = true,
-        SslMode = SslMode.Prefer
-    }.ToString();
+    // Clean and format the connection string for PostgreSQL
+    var postgresConnectionString = connectionString
+        .Replace("Trusted_Connection=True;", "")
+        .Replace("MultipleActiveResultSets=true;", "")
+        .Replace("TrustServerCertificate=True;", "Trust Server Certificate=true;")
+        .Replace("Server=", "Host=")
+        .Replace("Database=", "Database=")
+        .TrimEnd(';') + ";Trust Server Certificate=true;";
 
     builder.Services.AddDbContext<BlogContext>(opt => 
         opt.UseNpgsql(postgresConnectionString, 
