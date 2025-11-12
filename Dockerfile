@@ -2,12 +2,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy everything (since we're already in backend/BlogApi/)
+# Copy ONLY the project file first
+COPY BlogApi.csproj .
+
+# Restore dependencies
+RUN dotnet restore BlogApi.csproj
+
+# Copy the rest of the code
 COPY . .
 
-# Restore and publish
-RUN dotnet restore
-RUN dotnet publish -c Release -o /app/out --no-restore
+# Publish
+RUN dotnet publish BlogApi.csproj -c Release -o /app/out --no-restore
 
 # --- Runtime stage ---
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
