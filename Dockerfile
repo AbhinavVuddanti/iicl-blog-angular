@@ -1,26 +1,16 @@
 # --- Build stage ---
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-
-# Copy everything (we're already in backend/BlogApi/)
 COPY . .
-
-# Restore & publish using the project file in current directory
-RUN dotnet restore BlogApi.csproj
-RUN dotnet publish BlogApi.csproj -c Release -o /app/out --no-restore
+RUN dotnet restore "Blog.Api/Blog.Api.csproj"
+RUN dotnet publish "Blog.Api/Blog.Api.csproj" -c Release -o /app/out
 
 # --- Runtime stage ---
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/out .
-
-# Render uses $PORT
+# Render provides PORT. Bind to 0.0.0.0 for external access.
 ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
-ENV ASPNETCORE_ENVIRONMENT=Production
-
-# Health check
-HEALTHCHECK CMD curl --fail http://localhost:${PORT}/health || exit 1
-
-EXPOSE ${PORT}
-
-ENTRYPOINT ["dotnet", "BlogApi.dll"]
+# Run in Development so the app uses SQLite (no external DB needed)
+ENV ASPNETCORE_ENVIRONMENT=Development
+CMD ["dotnet", "Blog.Api.dll"]
