@@ -5,22 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>✨ Blog Master | Create & Manage Your Stories</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <style>
     :root {
       --primary: #6c63ff;
+      --primary-light: #8a85ff;
+      --primary-dark: #4a45b1;
       --secondary: #4a45b1;
       --light: #f8f9ff;
+      --lighter: #ffffff;
       --dark: #2c3e50;
+      --dark-light: #4a5568;
       --success: #28a745;
-      --danger: #dc3545;
+      --danger: #ff4757;
+      --warning: #ffc107;
+      --gray: #e2e8f0;
+      --gray-dark: #a0aec0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --transition: all 0.3s ease;
     }
     
     body { 
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       font-family: 'Poppins', sans-serif;
       min-height: 100vh;
+      color: var(--dark);
+      line-height: 1.6;
     }
     
     .container { 
@@ -29,23 +42,98 @@
       padding: 0 20px;
     }
     
+    /* Header */
     .header {
-      background: white;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       border-radius: 15px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.05);
+      padding: 1.5rem 2rem;
+      margin: 1rem 0 2.5rem;
+      box-shadow: var(--shadow-lg);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 200px;
+      height: 100%;
+      background: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23ffffff10' d='M0 0h200v200H0V0zm0 0l40 40-40 40V0zm0 80l40 40-40 40V80zm0 80l40-40 40 40-40 40-40-40z'/%3E%3C/svg%3E");
+      opacity: 0.7;
+    }
+    
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-bottom: 0;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Buttons */
+    .btn {
+      font-weight: 500;
+      border-radius: 50px;
+      padding: 0.6rem 1.5rem;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn i {
+      font-size: 0.9em;
     }
     
     .btn-primary {
       background: var(--primary);
-      border: none;
-      padding: 10px 25px;
-      border-radius: 50px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+      border: 2px solid var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 99, 255, 0.35);
+    }
+    
+    .btn-outline-primary {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+    
+    .btn-outline-primary:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      border: 2px solid var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #ff2d40;
+      border-color: #ff2d40;
+      transform: translateY(-2px);
     }
     
     .btn-primary:hover {
@@ -64,17 +152,19 @@
     .post-card { 
       background: white;
       border: none;
-      border-radius: 15px;
+      border-radius: 12px;
       overflow: hidden;
-      transition: all 0.3s ease;
-      margin-bottom: 25px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.03);
+      transition: var(--transition);
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     
-    .post-card:hover { 
+    .post-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-lg);
     }
     
     .card-body {
@@ -128,17 +218,19 @@
       margin-bottom: 1.5rem;
     }
     
+    /* Modals */
     .modal-content {
       border: none;
-      border-radius: 15px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       overflow: hidden;
     }
     
     .modal-header {
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
       border-bottom: none;
-      padding: 1.5rem;
+      padding: 1.5rem 2rem;
     }
     
     .modal-title {
@@ -290,53 +382,106 @@
     let currentEditId = null;
 
     async function loadPosts() {
-      document.getElementById('loading').style.display = 'block';
+      const container = document.getElementById('posts');
+      const noPosts = document.getElementById('noPosts');
+      const loading = document.getElementById('loading');
+      
+      // Show loading state
+      container.innerHTML = '';
+      noPosts.style.display = 'none';
+      loading.style.display = 'flex';
+      
       try {
-        const res = await fetch(API_URL);
-        const posts = await res.json();
-        const container = document.getElementById('posts');
-        const noPosts = document.getElementById('noPosts');
+        const response = await fetch(API_URL, {
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const posts = await response.json();
+        
+        if (!posts || !Array.isArray(posts)) {
+          throw new Error('Invalid response format');
+        }
 
         if (posts.length === 0) {
-          container.innerHTML = '';
           noPosts.style.display = 'block';
         } else {
-          noPosts.style.display = 'none';
-          container.innerHTML = posts.map(p => `
-            <div class="col-md-6">
-            <div class="card post-card h-100">
-              <div class="post-image">
-                <i class="fas fa-feather-alt"></i>
-              </div>
-              <div class="card-body d-flex flex-column">
-                <h5 class="card-title">${p.title}</h5>
-                <div class="author">
-                  <i class="fas fa-user"></i>
-                  <span>${p.author}</span>
+          container.innerHTML = posts.map(post => `
+            <div class="col-md-6 col-lg-4 mb-4">
+              <div class="card post-card h-100">
+                <div class="post-image">
+                  <i class="fas fa-feather-alt"></i>
                 </div>
-                <p class="card-text flex-grow-1">${p.content.length > 150 ? p.content.substring(0, 150) + '...' : p.content}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                  <small class="text-muted">${new Date().toLocaleDateString()}</small>
-                  <div>
-                    <button class="btn btn-sm btn-outline-primary me-2" 
-                            onclick="editPost(${p.id}, '${p.title.replace(/'/g, "\\'")}', '${p.author.replace(/'/g, "\\'")}', '${p.content.replace(/'/g, "\\'")}')">
-                      <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" 
-                            onclick="openDeleteModal(${p.id})">
-                      <i class="fas fa-trash-alt"></i>
-                    </button>
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">${escapeHtml(post.title)}</h5>
+                  <div class="author mb-2">
+                    <i class="fas fa-user me-1"></i>
+                    <span>${escapeHtml(post.author)}</span>
+                  </div>
+                  <p class="card-text flex-grow-1">
+                    ${post.content.length > 100 ? escapeHtml(post.content.substring(0, 100)) + '...' : escapeHtml(post.content)}
+                  </p>
+                  <div class="d-flex justify-content-between align-items-center mt-3">
+                    <small class="text-muted">
+                      <i class="far fa-calendar-alt me-1"></i>
+                      ${new Date(post.createdAt || new Date()).toLocaleDateString()}
+                    </small>
+                    <div class="btn-group">
+                      <button class="btn btn-sm btn-outline-primary" 
+                              onclick="editPost('${post.id}', '${escapeSingleQuote(post.title)}', '${escapeSingleQuote(post.author)}', '${escapeSingleQuote(post.content)}')">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger ms-2" 
+                              onclick="openDeleteModal('${post.id}')">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           `).join('');
         }
       } catch (err) {
-        document.getElementById('posts').innerHTML = `<div class="col-12 text-danger">Error: ${err.message}</div>`;
+        console.error('Error loading posts:', err);
+        container.innerHTML = `
+          <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+              <i class="fas fa-exclamation-circle me-2"></i>
+              Failed to load posts. ${err.message}
+              <button class="btn btn-sm btn-outline-secondary ms-3" onclick="loadPosts()">
+                <i class="fas fa-sync-alt me-1"></i> Retry
+              </button>
+            </div>
+          </div>`;
+      } finally {
+        loading.style.display = 'none';
       }
-      document.getElementById('loading').style.display = 'none';
+    }
+    
+    // Helper functions
+    function escapeHtml(unsafe) {
+      if (!unsafe) return '';
+      return unsafe
+        .toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    function escapeSingleQuote(str) {
+      if (!str) return '';
+      return str.replace(/'/g, '\'');
     }
 
     function openModal(mode) {
@@ -347,13 +492,38 @@
     }
 
     function editPost(id, title, author, content) {
-      currentEditId = id;
-      document.getElementById('modalTitle').innerText = 'Edit Post';
-      document.getElementById('postId').value = id;
-      document.getElementById('title').value = title;
-      document.getElementById('author').value = author;
-      document.getElementById('content').value = content;
-      new bootstrap.Modal(document.getElementById('postModal')).show();
+      try {
+        if (!id) throw new Error('Invalid post ID');
+        
+        currentEditId = id;
+        
+        // Decode HTML entities before displaying
+        const titleElement = document.getElementById('title');
+        const authorElement = document.getElementById('author');
+        const contentElement = document.getElementById('content');
+        
+        if (titleElement) titleElement.value = decodeHtml(title);
+        if (authorElement) authorElement.value = decodeHtml(author);
+        if (contentElement) contentElement.value = decodeHtml(content);
+        
+        document.getElementById('postId').value = id;
+        document.getElementById('modalTitle').innerText = 'Edit Post';
+        
+        const modal = new bootstrap.Modal(document.getElementById('postModal'));
+        modal.show();
+        
+      } catch (err) {
+        console.error('Error in editPost:', err);
+        alert(`Error preparing edit form: ${err.message}`);
+      }
+    }
+    
+    // Helper function to decode HTML entities
+    function decodeHtml(html) {
+      if (!html) return '';
+      const txt = document.createElement('textarea');
+      txt.innerHTML = html;
+      return txt.value;
     }
 
     async function savePost() {
@@ -368,19 +538,31 @@
       const url = id ? `${API_URL}/${id}` : API_URL;
 
       try {
-        const res = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch(url, {
+          method: method,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           body: JSON.stringify(data)
         });
-        if (res.ok) {
-          bootstrap.Modal.getInstance(document.getElementById('postModal')).hide();
-          loadPosts();
-        } else {
-          alert('Save failed');
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.title || 'Failed to save post');
         }
+
+        const result = await response.json();
+        
+        // Close the modal and refresh the posts
+        const modal = bootstrap.Modal.getInstance(document.getElementById('postModal'));
+        if (modal) modal.hide();
+        
+        loadPosts();
+        
       } catch (err) {
-        alert('Error: ' + err.message);
+        console.error('Error saving post:', err);
+        alert(`Error: ${err.message || 'Failed to save post. Please try again.'}`);
       }
     }
 
@@ -391,14 +573,32 @@
     }
 
     async function deletePost() {
+      if (!deleteId) return;
+      
       try {
-        const res = await fetch(`${API_URL}/${deleteId}`, { method: 'DELETE' });
-        if (res.ok) {
-          bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-          loadPosts();
+        const response = await fetch(`${API_URL}/${deleteId}`, { 
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.title || 'Failed to delete post');
         }
+
+        // Close the modal and refresh the posts
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+        if (modal) modal.hide();
+        
+        loadPosts();
+        
       } catch (err) {
-        alert('Delete failed');
+        console.error('Error deleting post:', err);
+        alert(`Error: ${err.message || 'Failed to delete post. Please try again.'}`);
+      } finally {
+        deleteId = null; // Reset the deleteId
       }
     }
 

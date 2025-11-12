@@ -117,17 +117,30 @@ if (Directory.Exists(wwwrootPath))
     app.UseStaticFiles();
     
     // Handle SPA routing
-    app.MapWhen(context => 
-        !context.Request.Path.StartsWithSegments("/api") && 
-        !context.Request.Path.StartsWithSegments("/swagger"),
-        builder =>
+    // Serve static files
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+// Handle SPA fallback routing
+app.MapWhen(
+    ctx => !ctx.Request.Path.StartsWith("/api") && !ctx.Request.Path.StartsWith("/swagger"),
+    appBuilder =>
+    {
+        appBuilder.UseSpa(spa =>
         {
-            builder.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "wwwroot";
-                spa.Options.DefaultPage = "/index.html";
-            });
+            spa.Options.SourcePath = "wwwroot";
+            spa.Options.DefaultPage = "/index.html";
         });
+    }
+);
+
+// Ensure Swagger works in production
+app.UseSwagger();
+app.UseSwaggerUI(c => 
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1");
+    c.RoutePrefix = "swagger";
+});
 }
 else
 {
