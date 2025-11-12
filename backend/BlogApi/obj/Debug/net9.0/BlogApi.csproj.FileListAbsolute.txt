@@ -324,3 +324,7 @@ D:\My Work\iicl-blog-angular\backend\BlogApi\bin\Debug\net9.0\BlogApi.runtimecon
 D:\My Work\iicl-blog-angular\backend\BlogApi\bin\Debug\net9.0\BlogApi.pdb
 D:\My Work\iicl-blog-angular\backend\BlogApi\obj\Debug\net9.0\BlogApi.genruntimeconfig.cache
 D:\My Work\iicl-blog-angular\backend\BlogApi\obj\Debug\net9.0\ref\BlogApi.dll
+D:\My Work\iicl-blog-angular\backend\BlogApi\bin\Debug\net9.0\BlogApi.staticwebassets.runtime.json
+D:\My Work\iicl-blog-angular\backend\BlogApi\bin\Debug\net9.0\Microsoft.AspNetCore.SpaServices.Extensions.dll
+D:\My Work\iicl-blog-angular\backend\BlogApi\obj\Debug\net9.0\compressed\1wkyv2klel-1l21m0r491.gz
+D:\My Work\iicl-blog-angular\backend\BlogApi\obj\Debug\net9.0\compressed\1cxgnqm8hp-mvrpl04ts1.gz

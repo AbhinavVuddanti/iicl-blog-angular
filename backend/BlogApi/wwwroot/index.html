@@ -4,10 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>✨ Blog Master | Create & Manage Your Stories</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <!-- Animate.css -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <!-- Custom CSS -->
   <style>
     :root {
       --primary: #6c63ff;
@@ -292,18 +297,20 @@
       font-size: 3rem;
     }
   </style>
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <div class="header text-center text-md-start">
+    <div class="header">
       <div class="row align-items-center">
-        <div class="col-md-8">
-          <h1 class="mb-3"><i class="fas fa-blog me-2"></i>My Blog Dashboard</h1>
-          <p class="text-muted">Create, edit, and manage your blog posts with ease</p>
+        <div class="col-md-6">
+          <h1 class="display-5 fw-bold mb-2"><i class="fas fa-pen-fancy me-2"></i>Blog Master</h1>
+          <p class="lead mb-0 text-muted">Create and manage your amazing blog posts</p>
         </div>
-        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-          <button class="btn btn-primary" onclick="openModal('create')">
-            <i class="fas fa-plus-circle"></i> New Post
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+          <button class="btn btn-primary btn-lg px-4" onclick="openModal('add')" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Create a new blog post">
+            <i class="fas fa-plus-circle me-2"></i>New Post
           </button>
         </div>
       </div>
@@ -320,64 +327,115 @@
       <i class="fas fa-feather-alt" style="font-size: 3rem; color: #6c63ff; margin-bottom: 1rem;"></i>
       <h3>No Posts Yet</h3>
       <p>Your blog is waiting for its first story. Click the button below to get started!</p>
-      <button class="btn btn-primary" onclick="openModal('create')">
+      <button class="btn btn-primary" onclick="openModal('add')">
         <i class="fas fa-plus-circle"></i> Create Your First Post
       </button>
     </div>
   </div>
 
   <!-- Modal for Create/Edit -->
-  <div class="modal fade" id="postModal" tabindex="-1">
-    <div class="modal-dialog">
+  <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalTitle"><i class="fas fa-plus-circle me-2"></i>Add New Post</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalTitle"><i class="fas fa-file-alt me-2"></i>New Blog Post</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <form id="postForm">
+        <div class="modal-body p-4">
+          <form id="postForm" onsubmit="savePost(); return false;">
             <input type="hidden" id="postId">
             <div class="mb-3">
-              <label class="form-label">Title</label>
-              <input type="text" class="form-control" id="title" required>
+              <label for="title" class="form-label fw-bold">Title</label>
+              <input type="text" class="form-control form-control-lg" id="title" required 
+                     placeholder="Enter post title">
             </div>
             <div class="mb-3">
-              <label class="form-label">Author</label>
-              <input type="text" class="form-control" id="author" required>
+              <label for="author" class="form-label fw-bold">Author</label>
+              <input type="text" class="form-control" id="author" required 
+                     placeholder="Your name">
             </div>
             <div class="mb-3">
-              <label class="form-label">Content</label>
-              <textarea class="form-control" id="content" rows="4" required></textarea>
+              <label for="content" class="form-label fw-bold">Content</label>
+              <textarea class="form-control" id="content" rows="5" required
+                        placeholder="Write your blog post here..."></textarea>
             </div>
           </form>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="savePost()">Save Post</button>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Cancel
+          </button>
+          <button type="button" class="btn btn-primary px-4" onclick="savePost()">
+            <i class="fas fa-save me-1"></i> Save Post
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Delete Confirmation -->
-  <div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header">
+        <div class="modal-header bg-danger text-white">
           <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">Are you sure you want to delete this post?</div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger" onclick="deletePost()">Delete</button>
+        <div class="modal-body p-4">
+          <div class="text-center">
+            <div class="mb-3">
+              <i class="fas fa-exclamation-circle text-danger" style="font-size: 3rem;"></i>
+            </div>
+            <h5 class="mb-3">Are you sure?</h5>
+            <p class="text-muted">This action cannot be undone. The post will be permanently deleted.</p>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Cancel
+          </button>
+          <button type="button" class="btn btn-danger px-4" onclick="deletePost()">
+            <i class="fas fa-trash-alt me-1"></i> Delete
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Initialize Bootstrap components
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+      
+      // Initialize modals
+      window.postModal = new bootstrap.Modal(document.getElementById('postModal'));
+      window.deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+      
+      // Reset form when modal is closed
+      var postModalEl = document.getElementById('postModal');
+      if (postModalEl) {
+        postModalEl.addEventListener('hidden.bs.modal', function () {
+          var form = document.getElementById('postForm');
+          if (form) form.reset();
+          currentEditId = null;
+          document.getElementById('modalTitle').innerHTML = '<i class="fas fa-file-alt me-2"></i>New Blog Post';
+        });
+      }
+      
+      // Load posts on page load
+      loadPosts();
+    });
+    
+    // Make Bootstrap available globally
+    window.bootstrap = bootstrap;
+    
+    // API URL
+    const API_URL = '/api/BlogPosts';
+    let currentEditId = null;
     const API_URL = '/api/BlogPosts';
     let currentEditId = null;
 
@@ -386,8 +444,12 @@
       const noPosts = document.getElementById('noPosts');
       const loading = document.getElementById('loading');
       
-      // Show loading state
-      container.innerHTML = '';
+      try {
+        // Show loading state
+        container.innerHTML = '';
+        container.style.display = 'none';
+        noPosts.style.display = 'none';
+        loading.style.display = 'flex';
       noPosts.style.display = 'none';
       loading.style.display = 'flex';
       
@@ -414,14 +476,13 @@
         if (posts.length === 0) {
           noPosts.style.display = 'block';
         } else {
-          container.innerHTML = posts.map(post => `
-            <div class="col-md-6 col-lg-4 mb-4">
-              <div class="card post-card h-100">
-                <div class="post-image">
-                  <i class="fas fa-feather-alt"></i>
-                </div>
-                <div class="card-body d-flex flex-column">
-                  <h5 class="card-title">${escapeHtml(post.title)}</h5>
+          container.innerHTML = `
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="postsContainer">
+              ${posts.map(post => `
+                <div class="col">
+                  <div class="card post-card h-100">
+                    <div class="post-image">
+                      <i class="fas fa-feather-alt"></i>
                   <div class="author mb-2">
                     <i class="fas fa-user me-1"></i>
                     <span>${escapeHtml(post.author)}</span>
@@ -484,14 +545,22 @@
       return str.replace(/'/g, '\'');
     }
 
-    function openModal(mode) {
-      currentEditId = null;
-      document.getElementById('postForm').reset();
-      document.getElementById('modalTitle').innerText = mode === 'create' ? 'Add New Post' : 'Edit Post';
-      new bootstrap.Modal(document.getElementById('postModal')).show();
+    function openModal(mode, id = null) {
+      const title = document.getElementById('modalTitle');
+      
+      if (mode === 'add') {
+        title.innerHTML = '<i class="fas fa-plus-circle me-2"></i>New Blog Post';
+        document.getElementById('postForm').reset();
+        currentEditId = null;
+      } else if (mode === 'edit' && id) {
+        title.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Blog Post';
+        currentEditId = id;
+      }
+      
+      window.postModal.show();
     }
 
-    function editPost(id, title, author, content) {
+    async function editPost(id, title, author, content) {
       try {
         if (!id) throw new Error('Invalid post ID');
         
@@ -527,83 +596,166 @@
     }
 
     async function savePost() {
-      const id = document.getElementById('postId').value;
-      const data = {
-        title: document.getElementById('title').value,
-        author: document.getElementById('author').value,
-        content: document.getElementById('content').value
-      };
-
-      const method = id ? 'PUT' : 'POST';
-      const url = id ? `${API_URL}/${id}` : API_URL;
-
+      const title = document.getElementById('title').value.trim();
+      const author = document.getElementById('author').value.trim();
+      const content = document.getElementById('content').value.trim();
+      const saveBtn = document.querySelector('#postModal .btn-primary');
+      const originalBtnText = saveBtn.innerHTML;
+      
+      if (!title || !author || !content) {
+        showAlert('Please fill in all fields', 'warning');
+        return;
+      }
+      
+      const postData = { title, author, content };
+      
       try {
-        const response = await fetch(url, {
-          method: method,
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.title || 'Failed to save post');
+        // Show loading state on button
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...';
+        
+        let response;
+        
+        if (currentEditId) {
+          // Update existing post
+          response = await fetch(`${API_URL}/${currentEditId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(postData)
+          });
+        } else {
+          // Create new post
+          response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(postData)
+          });
         }
-
-        const result = await response.json();
         
-        // Close the modal and refresh the posts
-        const modal = bootstrap.Modal.getInstance(document.getElementById('postModal'));
-        if (modal) modal.hide();
+        if (!response.ok) {
+          throw new Error(await response.text() || 'Failed to save post');
+        }
         
+        // Show success message
+        showAlert('Post saved successfully!', 'success');
+        
+        // Close modal and refresh posts
+        window.postModal.hide();
         loadPosts();
         
-      } catch (err) {
-        console.error('Error saving post:', err);
-        alert(`Error: ${err.message || 'Failed to save post. Please try again.'}`);
+      } catch (error) {
+        console.error('Error saving post:', error);
+        showAlert(error.message || 'Failed to save post. Please try again.', 'danger');
+      } finally {
+        // Reset button state
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalBtnText;
       }
+    }
+    
+    // Helper function to show alerts
+    function showAlert(message, type) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+      alertDiv.role = 'alert';
+      alertDiv.style.zIndex = '1100';
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      document.body.appendChild(alertDiv);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => alertDiv.remove(), 150);
+      }, 5000);
     }
 
     let deleteId = null;
     function openDeleteModal(id) {
       deleteId = id;
-      new bootstrap.Modal(document.getElementById('deleteModal')).show();
+      window.deleteModal.show();
     }
 
     async function deletePost() {
       if (!deleteId) return;
       
+      const deleteBtn = document.querySelector('#deleteModal .btn-danger');
+      const originalBtnText = deleteBtn.innerHTML;
+      
       try {
-        const response = await fetch(`${API_URL}/${deleteId}`, { 
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.title || 'Failed to delete post');
-        }
-
-        // Close the modal and refresh the posts
-        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-        if (modal) modal.hide();
+        // Show loading state on button
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Deleting...';
         
+        const response = await fetch(`${API_URL}/${deleteId}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          throw new Error(await response.text() || 'Failed to delete post');
+        }
+        
+        // Show success message
+        showAlert('Post deleted successfully!', 'success');
+        
+        // Close modal and refresh posts
+        window.deleteModal.hide();
         loadPosts();
         
-      } catch (err) {
-        console.error('Error deleting post:', err);
-        alert(`Error: ${err.message || 'Failed to delete post. Please try again.'}`);
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        showAlert(error.message || 'Failed to delete post. Please try again.', 'danger');
       } finally {
-        deleteId = null; // Reset the deleteId
+        deleteId = null;
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = originalBtnText;
       }
     }
 
-    // Load posts on page load
-    loadPosts();
+    // Make sure DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+      
+      // Load posts
+      loadPosts();
+      
+      // Initialize modals
+      var postModal = new bootstrap.Modal(document.getElementById('postModal'));
+      var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+      
+      // Store Bootstrap globally for debugging
+      window.bootstrap = bootstrap;
+      
+      // Reset form when modal is closed
+      var postModalEl = document.getElementById('postModal');
+      if (postModalEl) {
+        postModalEl.addEventListener('hidden.bs.modal', function () {
+          var form = document.getElementById('postForm');
+          if (form) form.reset();
+          currentEditId = null;
+        });
+      }
+      
+      // Initialize delete modal
+      var deleteModalEl = document.getElementById('deleteModal');
+      if (deleteModalEl) {
+        deleteModalEl.addEventListener('hidden.bs.modal', function () {
+          deleteId = null;
+        });
+      }
+    });
+  </script>
+  <!-- Custom JS -->
+  <script>
+    // Make Bootstrap available globally
+    window.bootstrap = bootstrap;
   </script>
 </body>
 </html>
