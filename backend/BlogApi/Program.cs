@@ -1,17 +1,45 @@
 using Microsoft.EntityFrameworkCore;
 using BlogApi.Data;
-using BlogApi.Models;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using Npgsql;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
+// Add services to the container.
 builder.Services.AddControllers();
 
-// CORS
+// CORS - Configure properly for production
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() 
+    ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", p =>
-        p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// Add rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.Identity?.Name ?? context.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1)
+            }));
 });
 
 // Swagger
@@ -19,51 +47,91 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Blog API", Version = "v1" });
+    c.EnableAnnotations();
 });
 
-// DATABASE: SQL Server (local) | PostgreSQL (Render)
+// Database configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string missing");
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddDbContext<BlogContext>(opt => opt.UseSqlServer(connectionString));
+    builder.Services.AddDbContext<BlogContext>(opt => 
+        opt.UseSqlServer(connectionString));
 }
 else
 {
-    builder.Services.AddDbContext<BlogContext>(opt => opt.UseNpgsql(connectionString));
+    // For production (PostgreSQL)
+    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+    
+    // Create a new connection string builder to ensure proper formatting
+    var postgresConnectionString = new NpgsqlConnectionStringBuilder(connectionString)
+    {
+        TrustServerCertificate = true,
+        SslMode = SslMode.Prefer
+    }.ToString();
+
+    builder.Services.AddDbContext<BlogContext>(opt => 
+        opt.UseNpgsql(postgresConnectionString, 
+            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 }
 
 var app = builder.Build();
 
-// Pipeline
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1");
-    c.RoutePrefix = "swagger";
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1"));
+}
+
+// Security headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Add("Content-Security-Policy", 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data:; " +
+        "font-src 'self'; " +
+        "connect-src 'self'");
+
+    await next();
 });
 
-// Health Check (Render)
-app.MapGet("/health", () => Results.Ok("Healthy"));
-
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("AllowSpecificOrigins");
+app.UseRateLimiter();
 app.UseAuthorization();
+
+// Health Check
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }))
+   .WithName("HealthCheck")
+   .WithTags("Monitoring")
+   .RequireRateLimiting("fixed");
+
 app.MapControllers();
 
-// AUTO CREATE DB (NO MIGRATIONS — LIKE BEFORE)
+// Auto-migrate database in production
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<BlogContext>();
+    var services = scope.ServiceProvider;
     try
     {
-        context.Database.EnsureCreated(); // This is what you had — it just works
+        var context = services.GetRequiredService<BlogContext>();
+        if (context.Database.IsRelational())
+        {
+            await context.Database.MigrateAsync();
+        }
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error creating database");
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
     }
 }
 
