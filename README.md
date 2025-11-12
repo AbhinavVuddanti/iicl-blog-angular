@@ -1,123 +1,167 @@
-# Blog Management Application
+IICL Blog Management Application
 
-A full-stack blog management application built with .NET 9 Web API and Angular.
+A full-stack Blog Management Application built with .NET 9 Web API and Angular 19.
 
 ## Backend (.NET 9 Web API)
-
 ### Prerequisites
-
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [SQL Server Express LocalDB](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb) (or SQL Server)
+- .NET 9.0 SDK
+- SQLite (for development) or PostgreSQL (for production)
 
 ### Setup and Running
-
-1. Navigate to the backend directory:
-   ```bash
-   cd backend/BlogApi
-   ```
-
-2. Restore NuGet packages:
-   ```bash
-   dotnet restore
-   ```
-
-3. Run database migrations (this will create the database and seed initial data):
-   ```bash
-   dotnet ef database update
-   ```
-   
-   If you encounter an error about missing EF Core tools, install them with:
-   ```bash
-   dotnet tool install --global dotnet-ef
-   ```
-
-4. Run the API:
-   ```bash
-   dotnet run
-   ```
-
-The API will be available at `https://localhost:5001` or `http://localhost:5000`.
+Navigate to the backend directory:
+```
+cd backend/BlogApi
+```
+Restore NuGet packages:
+```
+dotnet restore
+```
+Run database migrations (this will create the SQLite database and apply migrations):
+```
+dotnet ef database update
+```
+If you encounter an error about missing EF Core tools, install them with:
+```
+dotnet tool install --global dotnet-ef
+```
+Run the API:
+```
+dotnet run
+```
+The API will be available at **http://localhost:5162** and Swagger UI at **http://localhost:5162/swagger**.
 
 ### API Endpoints
-
-- `GET /api/BlogPosts` - Get all blog posts (supports pagination and filtering)
-- `GET /api/BlogPosts/{id}` - Get a specific blog post by ID
-- `POST /api/BlogPosts` - Create a new blog post
-- `PUT /api/BlogPosts/{id}` - Update an existing blog post
-- `DELETE /api/BlogPosts/{id}` - Delete a blog post
+- **GET /api/blogs** — Get all blog posts (supports pagination and filtering)
+- **GET /api/blogs/{id}** — Get a specific blog post by ID
+- **POST /api/blogs** — Create a new blog post
+- **PUT /api/blogs/{id}** — Update an existing blog post
+- **DELETE /api/blogs/{id}** — Delete a blog post
 
 ### Swagger UI
+When running in development, access Swagger at:
+```
+http://localhost:5162/swagger
+```
+for testing API endpoints.
 
-When running in development, you can access the Swagger UI at `https://localhost:5001/swagger` to test the API endpoints.
+---
 
-## Frontend (Angular)
-
+## Frontend (Angular 19 + Angular Material)
 ### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18.0.0 or later)
-- [Angular CLI](https://angular.io/cli)
+- Node.js 18 or later (Angular 19 recommends Node 20+)
+- Angular CLI
 
 ### Setup and Running
+Navigate to the frontend directory:
+```
+cd frontend
+```
+Install dependencies:
+```
+npm install
+```
+Run the development server:
+```
+npm start
+```
+The application will be available at **http://localhost:4200**.
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+The frontend calls the API at **http://localhost:5162/api**. You can modify this in:
+```
+src/environments/environment.ts
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run the development server:
-   ```bash
-   ng serve
-   ```
-
-The application will be available at `http://localhost:4200`.
+---
 
 ## Deployment to Render
-
 ### Backend Deployment
-
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Set the following environment variables:
-   - `ASPNETCORE_ENVIRONMENT=Production`
-   - `ConnectionStrings__DefaultConnection` - Your production database connection string
-4. Set the build command: `dotnet publish -c Release -o output`
-5. Set the start command: `dotnet BlogApi.dll`
+1. Create a new **Web Service** on Render and connect your GitHub repository.
+2. In the Render settings:
+   - Build Command: `dotnet publish -c Release -o out`
+   - Start Command: `dotnet out/BlogApi.dll`
+3. Set environment variables:
+   - `ASPNETCORE_URLS=http://0.0.0.0:10000`
+   - `UsePostgres=true`
+   - `ConnectionStrings__Postgres=<your_postgres_connection_string>`
+   - `Cors__FrontendUrl=https://<your-frontend>.onrender.com`
 
 ### Frontend Deployment
-
 1. Build the Angular app for production:
-   ```bash
-   ng build --configuration production
-   ```
-2. Upload the contents of the `dist/blog-ui` directory to your static site hosting service.
+```
+npm run build
+```
+2. Set the API base URL in `src/environments/environment.prod.ts`:
+```
+export const environment = {
+  production: true,
+  apiBase: 'https://<your-backend>.onrender.com/api'
+};
+```
+3. Deploy the **dist/blog-admin/browser** folder to Render as a **Static Site**.
+
+---
 
 ## Features
-
-- Create, read, update, and delete blog posts
-- Responsive design
+- Full CRUD operations for Blog Posts
+- Responsive admin UI with Angular Material components
+- Validation with consistent JSON error responses
 - Pagination and filtering
-- RESTful API with proper status codes and error handling
-- Swagger API documentation
+- Swagger/OpenAPI documentation
+- CORS, rate limiting, and logging for security and reliability
+- Configurable database: SQLite (local) or PostgreSQL (cloud)
+
+---
 
 ## Technologies Used
-
 ### Backend
 - .NET 9 Web API
 - Entity Framework Core
-- SQL Server
-- Swagger/OpenAPI
+- SQLite / PostgreSQL
+- Swagger / OpenAPI
+- ASP.NET Middleware (CORS, Logging, Rate Limiting, Error Handling)
 
 ### Frontend
-- Angular 17+
+- Angular 19
 - TypeScript
+- Angular Material
 - RxJS
-- Angular Material (for UI components)
 
-## License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Example Requests
+**Create a new blog post:**
+```
+POST /api/blogs
+{
+  "title": "My First Post",
+  "content": "This is my first blog post using .NET and Angular.",
+  "author": "Abhinav Vuddanti"
+}
+```
+**Fetch blog posts with pagination:**
+```
+GET /api/blogs?page=1&pageSize=10&search=post
+```
+
+---
+
+## Author
+👤 **Abhinav Vuddanti**  
+📧 [abhin6289@gmail.com](mailto:abhin6289@gmail.com)
+
+---
+
+Live Urls :
+
+Backend : https://iicl-blog-1.onrender.com
+API endpoints :  https://iicl-blog-1.onrender.com/api/blogs
+Frontend : https://iicl-blog-1-1.onrender.com
+
+
+✅ **Summary:**
+This project delivers a complete full-stack blog management system with:
+- .NET 9 backend (secure, scalable API)
+- Angular 19 frontend (responsive and user-friendly UI)
+- Ready-to-deploy configuration for Render
+- Swagger documentation and robust validation
+
