@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+publish/
+publish.zip
+*.user
+*.PublishSettings
+blog.db
