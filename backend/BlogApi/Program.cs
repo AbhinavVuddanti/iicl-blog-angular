@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,7 +52,9 @@ builder.Services.AddSwaggerGen(c =>
 
 // Database configuration - Using SQLite for both development and production
 builder.Services.AddDbContext<BlogContext>(options =>
-    options.UseSqlite("Data Source=blog.db"));
+    options.UseSqlite("Data Source=blog.db")
+           .ConfigureWarnings(warnings => 
+               warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 var app = builder.Build();
 
@@ -105,10 +108,12 @@ app.UseAuthorization();
 // Health Check
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }))
    .WithName("HealthCheck")
-   .WithTags("Monitoring")
-   .RequireRateLimiting("fixed");
+   .WithTags("Monitoring");
 
 app.MapControllers();
+
+// Redirect root to Swagger
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 // Auto-migrate database in production
 using (var scope = app.Services.CreateScope())
@@ -117,15 +122,15 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<BlogContext>();
-        if (context.Database.IsRelational())
+        if (context.Database.IsRelational() && !context.Database.GetMigrations().Any())
         {
-            await context.Database.MigrateAsync();
+            await context.Database.EnsureCreatedAsync();
         }
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "An error occurred while initializing the database.");
     }
 }
 

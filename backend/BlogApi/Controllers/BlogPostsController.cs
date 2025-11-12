@@ -5,7 +5,7 @@ using BlogApi.Models;
 
 namespace BlogApi.Controllers
 {
-    [Route("api/blogs")]
+    [Route("api/BlogPosts")]
     [ApiController]
     public class BlogPostsController : ControllerBase
     {
