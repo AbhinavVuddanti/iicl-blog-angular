@@ -7,25 +7,33 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.AspNetCore.SpaServices.Extensions;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
 
-// CORS - Temporary permissive configuration for debugging
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.WithOrigins(
+                "http://localhost:3000",    // React dev server
+                "https://localhost:3000",   // React dev server (HTTPS)
+                "http://localhost:4200",    // Angular dev server
+                "https://localhost:4200",   // Angular dev server (HTTPS)
+                "http://localhost:5000",    // Backend HTTP
+                "https://localhost:5001"    // Backend HTTPS
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
-// Add rate limiting
+// Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -43,70 +51,72 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Blog API", Version = "v1" });
-    // Removed EnableAnnotations as it requires Swashbuckle.AspNetCore.Annotations package
+    c.SwaggerDoc("v1", new OpenApiInfo 
+    { 
+        Title = "Blog API", 
+        Version = "v1",
+        Description = "API for managing blog posts",
+        Contact = new OpenApiContact
+        {
+            Name = "Support",
+            Email = "support@example.com"
+        }
+    });
 });
 
-// Database configuration - Using SQLite for both development and production
+// Database configuration
 builder.Services.AddDbContext<BlogContext>(options =>
-    options.UseSqlite("Data Source=blog.db")
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=blog.db")
            .ConfigureWarnings(warnings => 
                warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 var app = builder.Build();
 
-// Create and seed the database
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<BlogContext>();
-        context.Database.EnsureCreated(); // This will create the database and apply any pending migrations
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while creating the database.");
-    }
-}
-
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1"));
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1");
+        c.RoutePrefix = "swagger";
+    });
 }
 
-// Security headers
+// Security headers middleware
 app.Use(async (context, next) =>
 {
-    var headers = context.Response.Headers;
-    headers["X-Content-Type-Options"] = "nosniff";
-    headers["X-Frame-Options"] = "DENY";
-    headers["X-XSS-Protection"] = "1; mode=block";
-    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    headers["Content-Security-Policy"] = 
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Add("Content-Security-Policy", 
         "default-src 'self'; " +
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
         "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data:; " +
         "font-src 'self'; " +
-        "connect-src 'self';";
-
+        "connect-src 'self';");
+    
     await next();
 });
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseRateLimiter();
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Health Check
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }))
-   .WithName("HealthCheck")
-   .WithTags("Monitoring");
+// Health Check endpoint
+app.MapGet("/health", () => Results.Ok(new { 
+    status = "Healthy", 
+    timestamp = DateTime.UtcNow,
+    environment = app.Environment.EnvironmentName 
+}));
 
+// API Controllers
 app.MapControllers();
 
 // Serve static files from wwwroot
@@ -116,52 +126,57 @@ if (Directory.Exists(wwwrootPath))
     app.UseDefaultFiles();
     app.UseStaticFiles();
     
-    // Handle SPA routing
+    // Handle SPA routing - serve index.html for non-API routes
     app.MapWhen(
         ctx => {
             var path = ctx.Request.Path.Value ?? string.Empty;
-            return !path.StartsWith("/api") && 
-                  !path.StartsWith("/swagger") &&
-                  !path.StartsWith("/_framework") &&
-                  !path.StartsWith("/_content");
+            return !path.StartsWith("/api", StringComparison.OrdinalIgnoreCase) && 
+                   !path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase) &&
+                   !path.StartsWith("/_framework", StringComparison.OrdinalIgnoreCase) &&
+                   !path.StartsWith("/_content", StringComparison.OrdinalIgnoreCase) &&
+                   !path.StartsWith("/health", StringComparison.OrdinalIgnoreCase);
         },
         appBuilder =>
         {
-            appBuilder.UseSpa(spa =>
+            appBuilder.Run(async context =>
             {
-                spa.Options.SourcePath = "wwwroot";
-                spa.Options.DefaultPage = "/index.html";
+                context.Response.ContentType = "text/html";
+                await context.Response.SendFileAsync(Path.Combine(wwwrootPath, "index.html"));
             });
         }
     );
-    
-    // Ensure static files are still served for all other requests
-    app.UseStaticFiles();
+}
 
-    // Ensure Swagger works in production
+// Ensure Swagger is available in production
+if (!app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI(c => 
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API V1");
         c.RoutePrefix = "swagger";
     });
-}
-else
-{
-    // Fallback to Swagger if wwwroot doesn't exist
-    app.MapGet("/", () => Results.Redirect("/swagger"));
+    
+    // Redirect root to Swagger in production if wwwroot doesn't exist
+    if (!Directory.Exists(wwwrootPath))
+    {
+        app.MapGet("/", () => Results.Redirect("/swagger"));
+    }
 }
 
-// Auto-migrate database in production
+// Database initialization
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<BlogContext>();
-        if (context.Database.IsRelational() && !context.Database.GetMigrations().Any())
+        if (context.Database.IsSqlite())
         {
-            await context.Database.EnsureCreatedAsync();
+            // For SQLite, we'll use EnsureCreated for simplicity
+            context.Database.EnsureCreated();
+            // If you want to use migrations in the future, use:
+            // await context.Database.MigrateAsync();
         }
     }
     catch (Exception ex)
