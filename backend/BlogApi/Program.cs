@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.AspNetCore.SpaServices.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -108,8 +109,31 @@ app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = Dat
 
 app.MapControllers();
 
-// Redirect root to Swagger
-app.MapGet("/", () => Results.Redirect("/swagger"));
+// Serve static files from wwwroot
+var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+if (Directory.Exists(wwwrootPath))
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+    
+    // Handle SPA routing
+    app.MapWhen(context => 
+        !context.Request.Path.StartsWithSegments("/api") && 
+        !context.Request.Path.StartsWithSegments("/swagger"),
+        builder =>
+        {
+            builder.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "wwwroot";
+                spa.Options.DefaultPage = "/index.html";
+            });
+        });
+}
+else
+{
+    // Fallback to Swagger if wwwroot doesn't exist
+    app.MapGet("/", () => Results.Redirect("/swagger"));
+}
 
 // Auto-migrate database in production
 using (var scope = app.Services.CreateScope())
